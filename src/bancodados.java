@@ -1,7 +1,9 @@
 import java.sql.Connection;
+import java.sql.*;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.sql.SQLException;
 public class bancodados {
     private Connection con = null;
     private Statement stm  = null;
@@ -21,12 +23,7 @@ public class bancodados {
         }
     }
     public boolean estaConecatdo() {
-        if (this.con != null) {
-            return true;
-        }
-        else {
-            return false;
-        }
+        return this.con != null;
     }
     public void listar() {
         try {
@@ -42,15 +39,46 @@ public class bancodados {
     }
     public void inserir(String id_cliente, String nome, String cep, String cpf) {
         try {
-            String query = "INSERT INTO cliente (id_cliente, nome, cep, cpf) VALUES ("+ id_cliente +", " + nome +", "+ cep +", " + cpf + ")";
-            this.stm.executeUpdate(query);
-            System.out.println("cliente " +id_cliente + "Incuido com SUCESSO" );
-            System.out.println("cliente " +nome + "Incuido com SUCESSO" );
-            System.out.println("cliente " +cep + "Incuido com SUCESSO" );
-            System.out.println("cliente " +cpf + "Incuido com SUCESSO" );
-
-        } catch(Exception e) {
-            System.out.println("Erro na Inclusao: "+ e.getMessage());
+            String query = "INSERT INTO cliente (id_cliente, nome, cep, cpf) VALUES (?, ?, ?, ?)";
+            PreparedStatement stmt = con.prepareStatement(query);
+            stmt.setString(1, id_cliente);
+            stmt.setString(2, nome);
+            stmt.setString(3, cep);
+            stmt.setString(4, cpf);
+            int linhasAfetadas = stmt.executeUpdate();
+            if (linhasAfetadas > 0) {
+                System.out.println("Dados inseridos com sucesso!");
+            } else {
+                System.out.println("Nenhum dado foi inserido.");
+            }
+        } catch (SQLException e) {
+            if (e.getErrorCode() == 1062) { // código de erro para chave única violada
+                System.err.println("Erro ao inserir dados: já existe um registro com o ID " + id_cliente);
+            } else {
+                System.err.println("Erro ao inserir dados: " + e.getMessage());
+            }
+        }
+    }
+    public void inseriritem(String id_item, String produto, Integer quantidade, String preço) {
+        try {
+            String query = "INSERT INTO senac_imports (id_item, produto, quantidade, preço) VALUES (?,?,?,?);";
+            PreparedStatement stmt = con.prepareStatement(query);
+            stmt.setString(1, id_item);
+            stmt.setString(2, produto);
+            stmt.setInt(3, quantidade);
+            stmt.setString(4, preço);
+            int linhasAfetadas = stmt.executeUpdate();
+            if (linhasAfetadas > 0) {
+                System.out.println("Dados inseridos com sucesso!");
+            } else {
+                System.out.println("Nenhum dado foi inserido.");
+            }
+        } catch (SQLException e) {
+            if (e.getErrorCode() == 1062) { // código de erro para chave única violada
+                System.err.println("Erro ao inserir dados: já existe um registro com o ID " + id_item);
+            } else {
+                System.err.println("Erro ao inserir dados: " + e.getMessage());
+            }
         }
     }
     public void editar(String id_cliente, String nome) {
@@ -67,6 +95,16 @@ public class bancodados {
             String query = "DELETE FROM cliente WHERE id_cliente = " + id_cliente + ";";
             this.stm.executeUpdate(query);
             System.out.println("ID: "+ id_cliente + "EXCLUIDO COM SUCESSO");
+
+        } catch(Exception e) {
+            System.out.println("Erro na Exclusao: "+ e.getMessage());
+        }
+    }
+    public void excluiritem(String id_item) {
+        try {
+            String query = "DELETE FROM senac_imports WHERE id_item = " + id_item + ";";
+            this.stm.executeUpdate(query);
+            System.out.println("ID: "+ id_item + "EXCLUIDO COM SUCESSO");
 
         } catch(Exception e) {
             System.out.println("Erro na Exclusao: "+ e.getMessage());
